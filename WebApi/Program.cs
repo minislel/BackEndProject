@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 namespace WebApi
 {
-    public class Program
+    public partial class Program
     {
         public static void Main(string[] args)
         {
