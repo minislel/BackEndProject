@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ApplicationCore.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -11,6 +12,8 @@ namespace Infrastructure.EF
 {
      public class AppDbContext : IdentityDbContext<UserEntity>
     {
+        public DbSet<SongPlay> SongPlays { get; set; }
+
         public AppDbContext(DbContextOptions options) : base(options)
         {
         }

@@ -17,6 +17,52 @@ namespace Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
 
+            modelBuilder.Entity("ApplicationCore.Models.SongPlay", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AlbumName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ArtistName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MsPlayed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PlayTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReasonEnd")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReasonStart")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Shuffle")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Skip")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TrackName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SongPlays");
+                });
+
             modelBuilder.Entity("Infrastructure.EF.UserEntity", b =>
                 {
                     b.Property<string>("Id")
