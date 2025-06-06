@@ -8,7 +8,8 @@ namespace ApplicationCore.Models
 {
     public class SongPlay
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
+        public string URI { get; set; }
         public DateTime PlayTime { get; set; }
         public string Platform { get; set; } 
         public int MsPlayed { get; set; }

@@ -19,8 +19,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("ApplicationCore.Models.SongPlay", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("AlbumName")
                         .IsRequired()
@@ -55,6 +56,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("TrackName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("URI")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

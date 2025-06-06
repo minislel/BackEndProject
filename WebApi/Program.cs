@@ -1,3 +1,4 @@
+using Infrastructure.Data;
 using Infrastructure.EF;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
@@ -5,7 +6,7 @@ namespace WebApi
 {
     public partial class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ namespace WebApi
             builder.Services.ConfigureJWT(new JwtSettings(builder.Configuration));
             builder.Services.ConfigureCors();
             builder.Services.AddEndpointsApiExplorer();
+
             builder.Services.AddSwaggerGen(options =>
             {
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -34,6 +36,7 @@ namespace WebApi
                     Scheme = "Bearer"
                 });
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+
     {
         {
             new OpenApiSecurityScheme
@@ -64,6 +67,12 @@ namespace WebApi
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await DataSeeder.SeedAsync(context);
+            }
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -80,6 +89,7 @@ namespace WebApi
             app.MapControllers();
 
             app.Run();
+
         }
     }
 }
