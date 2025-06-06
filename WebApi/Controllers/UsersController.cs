@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using WebApi.Dto;
 
@@ -48,5 +49,7 @@ namespace WebApi.Controllers
                 .Issuer(jwtSettings.Issuer)
                 .Encode();
         }
+
+
     }
 }

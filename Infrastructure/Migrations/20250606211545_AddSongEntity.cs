@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class AddSongEntity : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -49,6 +49,21 @@ namespace Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Songs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    TrackName = table.Column<string>(type: "TEXT", nullable: false),
+                    ArtistName = table.Column<string>(type: "TEXT", nullable: false),
+                    AlbumName = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Songs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -157,6 +172,33 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "SongPlays",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    URI = table.Column<string>(type: "TEXT", nullable: false),
+                    PlayTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Platform = table.Column<string>(type: "TEXT", nullable: false),
+                    MsPlayed = table.Column<int>(type: "INTEGER", nullable: false),
+                    SongId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ReasonStart = table.Column<string>(type: "TEXT", nullable: false),
+                    ReasonEnd = table.Column<string>(type: "TEXT", nullable: false),
+                    Shuffle = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Skip = table.Column<bool>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SongPlays", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SongPlays_Songs_SongId",
+                        column: x => x.SongId,
+                        principalTable: "Songs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "Details_CreatedAt", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
@@ -198,6 +240,11 @@ namespace Infrastructure.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SongPlays_SongId",
+                table: "SongPlays",
+                column: "SongId");
         }
 
         /// <inheritdoc />
@@ -219,10 +266,16 @@ namespace Infrastructure.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "SongPlays");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Songs");
         }
     }
 }

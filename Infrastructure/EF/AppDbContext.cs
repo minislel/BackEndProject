@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,7 +13,9 @@ namespace Infrastructure.EF
 {
      public class AppDbContext : IdentityDbContext<UserEntity>
     {
+        public DbSet<Song> Songs { get; set; }
         public DbSet<SongPlay> SongPlays { get; set; }
+
 
         public AppDbContext(DbContextOptions options) : base(options)
         {
@@ -21,6 +24,7 @@ namespace Infrastructure.EF
         
         protected override void OnModelCreating(ModelBuilder builder)
         { 
+
             base.OnModelCreating(builder);
             var adminId = "7abf1057-5d1e-4efd-8166-27e4f6712ead";
             var adminCreatedAt = new DateTime(2025, 04, 08);
@@ -46,6 +50,11 @@ namespace Infrastructure.EF
                 UserEntityId = adminId,
                 CreatedAt = adminCreatedAt,
             });
+            builder.Entity<SongPlay>()
+                .HasOne(sp => sp.Song)
+                .WithMany(s => s.SongPlays)
+                .HasForeignKey(sp => sp.SongId);
+            
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         { 
