@@ -53,8 +53,8 @@ namespace Infrastructure.EF
             builder.Entity<SongPlay>()
                 .HasOne(sp => sp.Song)
                 .WithMany(s => s.SongPlays)
-                
-                ;
+                .HasForeignKey(sp => sp.URI);
+            ;
             
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

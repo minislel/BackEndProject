@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using WebApi.Dto;
+using System.Security.Policy;
+using Microsoft.IdentityModel.Tokens;
 
 namespace WebApi.Controllers
 {
@@ -32,7 +34,7 @@ namespace WebApi.Controllers
         #region Playback methods
 
         // GET: api/SpotifyHistory/5
-        [HttpGet("playbacks/{id}")]
+        [HttpGet("playbacks/{id:int}")]
         public async Task<ActionResult<SongPlay>> GetSongPlay(int id)
         {
             var songPlay = await _context.SongPlays.FindAsync(id);
@@ -68,11 +70,7 @@ namespace WebApi.Controllers
             {
                 return NotFound();
             }
-            if (existingSongPlay.URI != songPlay.URI)
-            {
-                var oldSong = _context.Songs.Find(existingSongPlay.URI);
-                var newSong = _context.Songs.Find(songPlay.URI);
-            }
+
 
             existingSongPlay.Id = songPlay.Id;
             existingSongPlay.URI = songPlay.URI;
@@ -81,14 +79,16 @@ namespace WebApi.Controllers
             existingSongPlay.MsPlayed = songPlay.MsPlayed;
             
             existingSongPlay.Song = _context.Songs.Find(songPlay.URI);
+            
             existingSongPlay.ReasonStart = songPlay.ReasonStart;
             existingSongPlay.ReasonEnd = songPlay.ReasonEnd;
             existingSongPlay.Shuffle = songPlay.Shuffle;
             existingSongPlay.Skip = songPlay.Skip;
             
-            
+
+
             //_context.Entry(existingSongPlay).State = EntityState.Modified;
-            
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -144,6 +144,20 @@ namespace WebApi.Controllers
 
             return NoContent();
         }
+        [HttpGet("playbacks/{URI}")]
+        public async Task<ActionResult<IEnumerable<SongPlay>>> GetSongPlaysByURI(string URI)
+        {
+            var songPlays = await _context.SongPlays
+                .Where(sp => sp.URI == URI)
+                .Include(sp => sp.Song)
+                .ToListAsync();
+            if (songPlays == null || !songPlays.Any())
+            {
+                return NotFound();
+            }
+            return songPlays;
+        }
+
 
         private bool SongPlayExists(int id)
         {
@@ -189,6 +203,86 @@ namespace WebApi.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction("GetSong", new { Uri = song.URI }, song);
         }
+        [HttpDelete("songs/{URI}")]
+        public async Task<ActionResult> DeleteSong(string URI)
+        {
+            var currentUser = GetCurrentUser();
+            if (currentUser == null)
+            {
+                return Forbid();
+            }
+            var song = await _context.Songs.FindAsync(URI);
+            if (song == null)
+            {
+                return NotFound();
+            }
+            var songPlays = _context.SongPlays.Where(sp => sp.URI == URI);
+            if (songPlays.Any())
+            {
+                _context.SongPlays.RemoveRange(songPlays);
+            }
+
+            _context.Songs.Remove(song);
+            
+            await _context.SaveChangesAsync();
+            return NoContent();
+
+
+        }
+        [HttpGet("songs/search/{query}")]
+        public async Task<ActionResult<ICollection<Song>>> SearchSong(string query, string? filter, string? sort)
+        {
+            if (query.IsNullOrEmpty() || string.IsNullOrWhiteSpace(query))
+                return BadRequest();
+            var normalizedQuery = query.ToLower();
+            List<Song> songs = new List<Song>();
+            if (string.IsNullOrEmpty(filter))
+            {
+                 songs = await _context.Songs
+                    .Where(s => s.TrackName.ToLower().Contains(normalizedQuery) ||
+                              s.AlbumName.ToLower().Contains(normalizedQuery) ||
+                              s.ArtistName.ToLower().Contains(normalizedQuery)
+                        )
+                    .ToListAsync();
+            }
+            else if(filter=="Artist")
+            {
+                 songs = await _context.Songs
+                     .Where(s => s.ArtistName.ToLower().Contains(normalizedQuery)
+                     )
+                     .ToListAsync();
+            }
+            else if(filter=="Album")
+            {
+                 songs = await _context.Songs
+                             .Where(s => s.AlbumName.ToLower().Contains(normalizedQuery))
+                             .ToListAsync();
+            }
+            else if(filter=="Track")
+            {
+                 songs = await _context.Songs
+             .Where(s => s.TrackName.ToLower().Contains(normalizedQuery))
+             .ToListAsync();
+            }
+            else
+            {
+                return BadRequest();
+            }
+            if (songs == null || !songs.Any())
+            {
+                return NotFound();
+            }
+            if (sort == "Album")
+                songs.OrderBy(s => s.AlbumName);
+            else if (sort == "Artist")
+                songs.OrderBy(s => s.ArtistName);
+            else if (sort == "Track")
+                songs.OrderBy(s => s.TrackName);
+
+            return songs;
+        }
+
+        
         #endregion
 
         private UserEntity? GetCurrentUser()
