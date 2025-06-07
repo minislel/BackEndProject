@@ -23,7 +23,7 @@ public class DataSeeder
 
         var lines = await File.ReadAllLinesAsync(path);
         var songPlays = new List<SongPlay>();
-        var songs = new Dictionary<int, Song>();
+        var songs = new Dictionary<string, Song>();
         foreach (var line in lines.Skip(1))
         {
             bool inQuotes = false;
@@ -45,18 +45,18 @@ public class DataSeeder
 
 
             var columns = newLine.Split(',');
-            var songid = (columns[4], columns[5], columns[6]).GetHashCode();
+            var songURI = columns[0];
 
-            if (!songs.TryGetValue(songid, out Song song))
+            if (!songs.TryGetValue(songURI, out Song song))
             {
                 song = new Song()
                 {
-                    Id = songid,
+                    URI = songURI,
                     TrackName = columns[4],
                     ArtistName = columns[5],
                     AlbumName = columns[6],
                 };
-                songs[songid] = song;
+                songs[songURI] = song;
             }
 
                 
@@ -66,7 +66,6 @@ public class DataSeeder
                     PlayTime = DateTime.ParseExact(columns[1], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
                     Platform = columns[2],
                     MsPlayed = int.Parse(columns[3]),
-                    SongId = song.Id,
                     Song = song,
                     ReasonStart = columns[7],
                     ReasonEnd = columns[8],

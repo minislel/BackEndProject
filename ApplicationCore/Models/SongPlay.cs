@@ -13,9 +13,7 @@ namespace ApplicationCore.Models
         public string URI { get; set; }
         public DateTime PlayTime { get; set; }
         public string Platform { get; set; } 
-        public int MsPlayed { get; set; }
-        public int SongId { get; set; }
-        [JsonIgnore]
+        public int MsPlayed { get; set; }   
         public Song Song { get; set; }
         public string ReasonStart { get; set; }
         public string ReasonEnd { get; set; }

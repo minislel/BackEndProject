@@ -18,7 +18,7 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("Bearer")]
+    //[Authorize("Bearer")]
     public class SpotifyHistoryController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -29,14 +29,15 @@ namespace WebApi.Controllers
             _context = context;
             _userManager = userManager;
         }
+        #region Playback methods
 
         // GET: api/SpotifyHistory/5
-        [HttpGet("{id}")]
+        [HttpGet("playbacks/{id}")]
         public async Task<ActionResult<SongPlay>> GetSongPlay(int id)
         {
             var songPlay = await _context.SongPlays.FindAsync(id);
             songPlay.Song = await _context.Songs
-                .Where(s => s.Id == songPlay.SongId)
+                .Where(s => s.URI == songPlay.URI)
                 .FirstOrDefaultAsync();
             if (songPlay == null)
             {
@@ -44,36 +45,13 @@ namespace WebApi.Controllers
             }
             return songPlay;
         }
-        [HttpGet("top10")]
-        public async Task<ActionResult<IEnumerable<SongRankElementDto>>> GetTop10Songs()
-        {
-            var topSongs = await _context.SongPlays
-                .Include(sp => sp.Song)
-                .GroupBy(sp => sp.SongId)
-                .Select(g => new
-                {
-                    Song = g.First().Song,
-                    PlayCount = g.Count()
-                })
-                .OrderByDescending(s => s.PlayCount)
-                .Take(10)
-                .Select(s => new SongRankElementDto
-                {
-                    TrackName = s.Song.TrackName,
-                    ArtistName = s.Song.ArtistName,
-                    AlbumName = s.Song.AlbumName,
-                    PlayCount = s.PlayCount  
-                })
-                .ToListAsync();
 
-            return Ok(topSongs);
-        }
 
 
         // PUT: api/SpotifyHistory/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutSongPlay(int id, SongPlay songPlay)
+        [HttpPut("playbacks/{id}")]
+        public async Task<IActionResult> PutSongPlay(int id, SongPlayPutPostDto songPlay)
         {
             if (id != songPlay.Id)
             {
@@ -85,8 +63,32 @@ namespace WebApi.Controllers
                 return Forbid();
             }
 
-            _context.Entry(songPlay).State = EntityState.Modified;
+            var existingSongPlay = await _context.SongPlays.FindAsync(id);
+            if (existingSongPlay == null)
+            {
+                return NotFound();
+            }
+            if (existingSongPlay.URI != songPlay.URI)
+            {
+                var oldSong = _context.Songs.Find(existingSongPlay.URI);
+                var newSong = _context.Songs.Find(songPlay.URI);
+            }
 
+            existingSongPlay.Id = songPlay.Id;
+            existingSongPlay.URI = songPlay.URI;
+            existingSongPlay.PlayTime = songPlay.PlayTime;
+            existingSongPlay.Platform = songPlay.Platform;
+            existingSongPlay.MsPlayed = songPlay.MsPlayed;
+            
+            existingSongPlay.Song = _context.Songs.Find(songPlay.URI);
+            existingSongPlay.ReasonStart = songPlay.ReasonStart;
+            existingSongPlay.ReasonEnd = songPlay.ReasonEnd;
+            existingSongPlay.Shuffle = songPlay.Shuffle;
+            existingSongPlay.Skip = songPlay.Skip;
+            
+            
+            //_context.Entry(existingSongPlay).State = EntityState.Modified;
+            
             try
             {
                 await _context.SaveChangesAsync();
@@ -108,7 +110,7 @@ namespace WebApi.Controllers
 
         // POST: api/SpotifyHistory
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("playbacks")]
         public async Task<ActionResult<SongPlay>> PostSongPlay(SongPlay songPlay)
         {
             var currentUser = GetCurrentUser();
@@ -123,7 +125,7 @@ namespace WebApi.Controllers
         }
 
         // DELETE: api/SpotifyHistory/5
-        [HttpDelete("{id}")]
+        [HttpDelete("playbacks/{id}")]
         public async Task<IActionResult> DeleteSongPlay(int id)
         {
             var currentUser = GetCurrentUser();
@@ -147,6 +149,47 @@ namespace WebApi.Controllers
         {
             return _context.SongPlays.Any(e => e.Id == id);
         }
+        #endregion
+        #region Song methods
+        [HttpGet("songs/{URI}")]
+        public async Task<ActionResult<Song>> GetSong(string URI)
+        {
+            var song = await _context.Songs.FindAsync(URI);
+            if (song == null)
+            {
+                return NotFound();
+            }
+            return song;
+        }
+        [HttpGet("songs/top10")]
+        public async Task<ActionResult<IEnumerable<SongRankElementDto>>> GetTop10Songs()
+        {
+            var topSongs = await _context.SongPlays
+                .Include(sp => sp.Song)
+                .GroupBy(sp => sp.URI)
+                .Select(g => new
+                {
+                    Song = g.First().Song,
+                    PlayCount = g.Count()
+                })
+                .OrderByDescending(s => s.PlayCount)
+                .Take(10)
+                .ToListAsync();
+            return Ok(topSongs);
+        }
+        [HttpPost("songs")]
+        public async Task<ActionResult<Song>> PostSong(Song song)
+        {
+            var currentUser = GetCurrentUser();
+            if (currentUser == null)
+            {
+                return Forbid();
+            }
+            _context.Songs.Add(song);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetSong", new { Uri = song.URI }, song);
+        }
+        #endregion
 
         private UserEntity? GetCurrentUser()
         {

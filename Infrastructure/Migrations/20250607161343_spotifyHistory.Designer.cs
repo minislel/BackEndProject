@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250606211545_AddSongEntity")]
-    partial class AddSongEntity
+    [Migration("20250607161343_spotifyHistory")]
+    partial class spotifyHistory
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -22,9 +22,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("ApplicationCore.Models.Song", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("URI")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("AlbumName")
                         .IsRequired()
@@ -38,7 +37,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("URI");
 
                     b.ToTable("Songs");
                 });
@@ -73,8 +72,9 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("Skip")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("SongId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("SongURI")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("URI")
                         .IsRequired()
@@ -82,7 +82,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SongId");
+                    b.HasIndex("SongURI");
 
                     b.ToTable("SongPlays");
                 });
@@ -301,7 +301,7 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("ApplicationCore.Models.Song", "Song")
                         .WithMany("SongPlays")
-                        .HasForeignKey("SongId")
+                        .HasForeignKey("SongURI")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

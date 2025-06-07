@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddSongEntity : Migration
+    public partial class spotifyHistory : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -55,15 +55,14 @@ namespace Infrastructure.Migrations
                 name: "Songs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    URI = table.Column<string>(type: "TEXT", nullable: false),
                     TrackName = table.Column<string>(type: "TEXT", nullable: false),
                     ArtistName = table.Column<string>(type: "TEXT", nullable: false),
                     AlbumName = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Songs", x => x.Id);
+                    table.PrimaryKey("PK_Songs", x => x.URI);
                 });
 
             migrationBuilder.CreateTable(
@@ -182,7 +181,7 @@ namespace Infrastructure.Migrations
                     PlayTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Platform = table.Column<string>(type: "TEXT", nullable: false),
                     MsPlayed = table.Column<int>(type: "INTEGER", nullable: false),
-                    SongId = table.Column<int>(type: "INTEGER", nullable: false),
+                    SongURI = table.Column<string>(type: "TEXT", nullable: false),
                     ReasonStart = table.Column<string>(type: "TEXT", nullable: false),
                     ReasonEnd = table.Column<string>(type: "TEXT", nullable: false),
                     Shuffle = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -192,10 +191,10 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_SongPlays", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SongPlays_Songs_SongId",
-                        column: x => x.SongId,
+                        name: "FK_SongPlays_Songs_SongURI",
+                        column: x => x.SongURI,
                         principalTable: "Songs",
-                        principalColumn: "Id",
+                        principalColumn: "URI",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -242,9 +241,9 @@ namespace Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_SongPlays_SongId",
+                name: "IX_SongPlays_SongURI",
                 table: "SongPlays",
-                column: "SongId");
+                column: "SongURI");
         }
 
         /// <inheritdoc />

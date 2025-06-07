@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -9,7 +10,8 @@ namespace ApplicationCore.Models
 {
     public class Song
     {
-        public int Id { get; set; }
+        [Key]
+        public string URI { get; set; }
         public string TrackName { get; set; }
         public string ArtistName { get; set; }
         public string AlbumName { get; set; }
