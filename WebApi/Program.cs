@@ -1,6 +1,7 @@
 using Infrastructure.Data;
 using Infrastructure.EF;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 namespace WebApi
 {
@@ -12,8 +13,10 @@ namespace WebApi
 
             // Add services to the container.
             builder.Services.AddAuthorization();
-           
-            builder.Services.AddDbContext<AppDbContext>();
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
             builder.Services.AddIdentity<UserEntity, IdentityRole>()
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();

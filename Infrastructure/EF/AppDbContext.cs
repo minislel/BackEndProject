@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +25,20 @@ namespace Infrastructure.EF
 
         
         protected override void OnModelCreating(ModelBuilder builder)
-        { 
+        {
+            foreach (var entityType in builder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(new ValueConverter<DateTime, DateTime>(
+                            v => DateTime.SpecifyKind(v, DateTimeKind.Utc),
+                            v => DateTime.SpecifyKind(v, DateTimeKind.Utc)));
+                    }
+                }
+            }
+
 
             base.OnModelCreating(builder);
             var adminId = "7abf1057-5d1e-4efd-8166-27e4f6712ead";
@@ -58,9 +73,8 @@ namespace Infrastructure.EF
             
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        { 
-            
-            optionsBuilder.UseSqlite("Data Source=C:\\data\\app.db");
+        {
+
         }
     }
 

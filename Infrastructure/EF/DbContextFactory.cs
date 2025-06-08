@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Infrastructure.EF;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Infrastructure.EF;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Configuration;
 
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
@@ -9,9 +11,16 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.EnableSensitiveDataLogging(true);
 
-        // Tu wstaw connection string, np. do lokalnej bazy
-        optionsBuilder.UseSqlite("Data Source=C:\\data\\app.db");
+        var config = new ConfigurationBuilder()
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../WebApi"))
+            .AddJsonFile("appsettings.json")
+            .Build();
+
+
+        var connectionString = config.GetConnectionString("DefaultConnection");
+        optionsBuilder.UseNpgsql(connectionString);
 
         return new AppDbContext(optionsBuilder.Options);
+
     }
 }
