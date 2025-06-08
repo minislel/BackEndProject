@@ -1,6 +1,7 @@
 using Infrastructure.Data;
 using Infrastructure.EF;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 namespace WebApi
 {
@@ -9,6 +10,8 @@ namespace WebApi
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+
 
             // Add services to the container.
             builder.Services.AddAuthorization();
@@ -80,6 +83,10 @@ namespace WebApi
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+
+          
+
 
             app.UseHttpsRedirection();
 
