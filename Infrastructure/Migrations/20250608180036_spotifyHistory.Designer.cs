@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250607161343_spotifyHistory")]
+    [Migration("20250608180036_spotifyHistory")]
     partial class spotifyHistory
     {
         /// <inheritdoc />
@@ -72,17 +72,13 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("Skip")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("SongURI")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("URI")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SongURI");
+                    b.HasIndex("URI");
 
                     b.ToTable("SongPlays");
                 });
@@ -301,7 +297,7 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("ApplicationCore.Models.Song", "Song")
                         .WithMany("SongPlays")
-                        .HasForeignKey("SongURI")
+                        .HasForeignKey("URI")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

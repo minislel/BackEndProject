@@ -181,7 +181,6 @@ namespace Infrastructure.Migrations
                     PlayTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Platform = table.Column<string>(type: "TEXT", nullable: false),
                     MsPlayed = table.Column<int>(type: "INTEGER", nullable: false),
-                    SongURI = table.Column<string>(type: "TEXT", nullable: false),
                     ReasonStart = table.Column<string>(type: "TEXT", nullable: false),
                     ReasonEnd = table.Column<string>(type: "TEXT", nullable: false),
                     Shuffle = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -191,8 +190,8 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_SongPlays", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SongPlays_Songs_SongURI",
-                        column: x => x.SongURI,
+                        name: "FK_SongPlays_Songs_URI",
+                        column: x => x.URI,
                         principalTable: "Songs",
                         principalColumn: "URI",
                         onDelete: ReferentialAction.Cascade);
@@ -241,9 +240,9 @@ namespace Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_SongPlays_SongURI",
+                name: "IX_SongPlays_URI",
                 table: "SongPlays",
-                column: "SongURI");
+                column: "URI");
         }
 
         /// <inheritdoc />

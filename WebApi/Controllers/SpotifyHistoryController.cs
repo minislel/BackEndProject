@@ -18,11 +18,13 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace WebApi.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
     //[Authorize("Bearer")]
     public class SpotifyHistoryController : ControllerBase
     {
+
         private readonly AppDbContext _context;
         private readonly UserManager<UserEntity> _userManager;
 
@@ -30,22 +32,25 @@ namespace WebApi.Controllers
         {
             _context = context;
             _userManager = userManager;
+
         }
         #region Playback methods
 
         // GET: api/SpotifyHistory/5
         [HttpGet("playbacks/{id:int}")]
-        public async Task<ActionResult<SongPlay>> GetSongPlay(int id)
+        public async Task<ActionResult<HateoasSongPlayWrapperDto>> GetSongPlay(int id)
         {
             var songPlay = await _context.SongPlays.FindAsync(id);
-            songPlay.Song = await _context.Songs
-                .Where(s => s.URI == songPlay.URI)
-                .FirstOrDefaultAsync();
             if (songPlay == null)
             {
                 return NotFound();
             }
-            return songPlay;
+            songPlay.Song = await _context.Songs
+                .Where(s => s.URI == songPlay.URI)
+                .FirstOrDefaultAsync();
+            var result = CreateHateoasForSongPlay(songPlay);
+
+            return Ok(result);
         }
 
 
@@ -53,7 +58,7 @@ namespace WebApi.Controllers
         // PUT: api/SpotifyHistory/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("playbacks/{id}")]
-        public async Task<IActionResult> PutSongPlay(int id, SongPlayPutPostDto songPlay)
+        public async Task<ActionResult<HateoasSongPlayWrapperDto>> PutSongPlay(int id, SongPlayPutDto songPlay)
         {
             if (id != songPlay.Id)
             {
@@ -70,6 +75,10 @@ namespace WebApi.Controllers
             {
                 return NotFound();
             }
+            if( await _context.Songs.FindAsync(songPlay.URI) is null)
+            {
+                return BadRequest("Invalid Song URI");
+            }
 
 
             existingSongPlay.Id = songPlay.Id;
@@ -77,14 +86,14 @@ namespace WebApi.Controllers
             existingSongPlay.PlayTime = songPlay.PlayTime;
             existingSongPlay.Platform = songPlay.Platform;
             existingSongPlay.MsPlayed = songPlay.MsPlayed;
-            
-            existingSongPlay.Song = _context.Songs.Find(songPlay.URI);
-            
+
+            //existingSongPlay.Song = _context.Songs.Find(songPlay.URI);
+
             existingSongPlay.ReasonStart = songPlay.ReasonStart;
             existingSongPlay.ReasonEnd = songPlay.ReasonEnd;
             existingSongPlay.Shuffle = songPlay.Shuffle;
             existingSongPlay.Skip = songPlay.Skip;
-            
+
 
 
             //_context.Entry(existingSongPlay).State = EntityState.Modified;
@@ -104,29 +113,49 @@ namespace WebApi.Controllers
                     throw;
                 }
             }
-
-            return NoContent();
+            
+            var result = CreateHateoasForSongPlay(existingSongPlay);
+            return Ok(result);
         }
 
         // POST: api/SpotifyHistory
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("playbacks")]
-        public async Task<ActionResult<SongPlay>> PostSongPlay(SongPlay songPlay)
+        public async Task<ActionResult<HateoasSongPlayWrapperDto>> PostSongPlay(SongPlayPostDto songPlay)
         {
             var currentUser = GetCurrentUser();
             if (currentUser == null)
             {
                 return Forbid();
             }
-            _context.SongPlays.Add(songPlay);
-            await _context.SaveChangesAsync();
+            var songPlayEntity = new SongPlay
+            {
+                URI = songPlay.URI,
+                PlayTime = songPlay.PlayTime,
+                Platform = songPlay.Platform,
+                MsPlayed = songPlay.MsPlayed,
+                ReasonStart = songPlay.ReasonStart,
+                ReasonEnd = songPlay.ReasonEnd,
+                Shuffle = songPlay.Shuffle,
+                Skip = songPlay.Skip
+            };
 
-            return CreatedAtAction("GetSongPlay", new { id = songPlay.Id }, songPlay);
+            var existingSong = await _context.Songs.FindAsync(songPlay.URI);
+            if (existingSong == null)
+            {
+                return BadRequest("The song with the specified URI does not exist.");
+            }
+            _context.SongPlays.Add(songPlayEntity);
+
+
+            await _context.SaveChangesAsync();
+            var result = CreateHateoasForSongPlay(songPlayEntity);
+            return Ok(result);
         }
 
         // DELETE: api/SpotifyHistory/5
         [HttpDelete("playbacks/{id}")]
-        public async Task<IActionResult> DeleteSongPlay(int id)
+        public async Task<ActionResult<List<HateoasLinkDto>>> DeleteSongPlay(int id)
         {
             var currentUser = GetCurrentUser();
             if (currentUser == null)
@@ -141,7 +170,13 @@ namespace WebApi.Controllers
 
             _context.SongPlays.Remove(songPlay);
             await _context.SaveChangesAsync();
-
+            var links = new List<HateoasLinkDto>
+                {
+                    new HateoasLinkDto(Url.Action("GetSongPlay", new { id }), "get_songplay", "GET"),
+                    new HateoasLinkDto(Url.Action("PutSongPlay", new { id }), "update_songplay", "PUT"),
+                    new HateoasLinkDto(Url.Action("DeleteSongPlay", new { id }), "delete_songplay", "DELETE"),
+                    new HateoasLinkDto(Url.Action("PostSongPlay"), "post_songplay", "POST")
+                };
             return NoContent();
         }
         [HttpGet("playbacks/{URI}")]
@@ -166,14 +201,15 @@ namespace WebApi.Controllers
         #endregion
         #region Song methods
         [HttpGet("songs/{URI}")]
-        public async Task<ActionResult<Song>> GetSong(string URI)
+        public async Task<ActionResult<HateoasSongWrapperDto>> GetSong(string URI)
         {
             var song = await _context.Songs.FindAsync(URI);
             if (song == null)
             {
                 return NotFound();
             }
-            return song;
+            var result = CreateHateoasForSong(song);
+            return Ok(result);
         }
         [HttpGet("songs/top10")]
         public async Task<ActionResult<IEnumerable<SongRankElementDto>>> GetTop10Songs()
@@ -192,19 +228,56 @@ namespace WebApi.Controllers
             return Ok(topSongs);
         }
         [HttpPost("songs")]
-        public async Task<ActionResult<Song>> PostSong(Song song)
+        public async Task<ActionResult<HateoasSongWrapperDto>> PostSong(SongPostDto song)
         {
             var currentUser = GetCurrentUser();
             if (currentUser == null)
             {
                 return Forbid();
             }
-            _context.Songs.Add(song);
+            if(song == null || string.IsNullOrEmpty(song.URI) || string.IsNullOrEmpty(song.TrackName) || string.IsNullOrEmpty(song.ArtistName) || string.IsNullOrEmpty(song.AlbumName))
+            {
+                return BadRequest("Song data is incomplete.");
+            }
+            Song newSong = new Song
+            {
+                URI = song.URI,
+                TrackName = song.TrackName,
+                ArtistName = song.ArtistName,
+                AlbumName=song.AlbumName
+            };
+            _context.Songs.Add(newSong);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetSong", new { Uri = song.URI }, song);
+            var result = CreateHateoasForSong(newSong);
+            return Ok(result);
+        }
+        [HttpPut("songs")]
+        public async Task<ActionResult<HateoasSongWrapperDto>> PutSong(string URI, SongPutDto song)
+        {
+            var currentUser = GetCurrentUser();
+            if (currentUser == null)
+            {
+                return Forbid();
+            }
+            if (song == null || string.IsNullOrEmpty(URI) || string.IsNullOrEmpty(song.TrackName) || string.IsNullOrEmpty(song.ArtistName) || string.IsNullOrEmpty(song.AlbumName))
+            {
+                return BadRequest("Song data is incomplete.");
+            }
+            var existingSong = _context.Songs.Find(URI);
+            if (existingSong == null)
+            {
+                return NotFound("Song not found.");
+            }
+            existingSong.TrackName = song.TrackName;
+            existingSong.ArtistName = song.ArtistName;
+            existingSong.AlbumName = song.AlbumName;
+            
+            await _context.SaveChangesAsync();
+            var result = CreateHateoasForSong(existingSong);
+            return Ok(result);
         }
         [HttpDelete("songs/{URI}")]
-        public async Task<ActionResult> DeleteSong(string URI)
+        public async Task<ActionResult<List<HateoasLinkDto>>> DeleteSong(string URI)
         {
             var currentUser = GetCurrentUser();
             if (currentUser == null)
@@ -223,9 +296,17 @@ namespace WebApi.Controllers
             }
 
             _context.Songs.Remove(song);
-            
+
             await _context.SaveChangesAsync();
-            return NoContent();
+            var result = new List<HateoasLinkDto>
+            {
+                new HateoasLinkDto(Url.Action("GetSong", new { URI }), "get_song", "GET"),
+                new HateoasLinkDto(Url.Action("PostSong"), "post_song", "POST"),
+                new HateoasLinkDto(Url.Action("DeleteSong", new { URI }), "delete_song", "DELETE"),
+                new HateoasLinkDto(Url.Action("PutSong", new { URI }), "put_song", "PUT")
+            };
+            
+            return Ok(result);
 
 
         }
@@ -238,31 +319,31 @@ namespace WebApi.Controllers
             List<Song> songs = new List<Song>();
             if (string.IsNullOrEmpty(filter))
             {
-                 songs = await _context.Songs
-                    .Where(s => s.TrackName.ToLower().Contains(normalizedQuery) ||
-                              s.AlbumName.ToLower().Contains(normalizedQuery) ||
-                              s.ArtistName.ToLower().Contains(normalizedQuery)
-                        )
+                songs = await _context.Songs
+                   .Where(s => s.TrackName.ToLower().Contains(normalizedQuery) ||
+                             s.AlbumName.ToLower().Contains(normalizedQuery) ||
+                             s.ArtistName.ToLower().Contains(normalizedQuery)
+                       )
+                   .ToListAsync();
+            }
+            else if (filter == "Artist")
+            {
+                songs = await _context.Songs
+                    .Where(s => s.ArtistName.ToLower().Contains(normalizedQuery)
+                    )
                     .ToListAsync();
             }
-            else if(filter=="Artist")
+            else if (filter == "Album")
             {
-                 songs = await _context.Songs
-                     .Where(s => s.ArtistName.ToLower().Contains(normalizedQuery)
-                     )
-                     .ToListAsync();
+                songs = await _context.Songs
+                            .Where(s => s.AlbumName.ToLower().Contains(normalizedQuery))
+                            .ToListAsync();
             }
-            else if(filter=="Album")
+            else if (filter == "Track")
             {
-                 songs = await _context.Songs
-                             .Where(s => s.AlbumName.ToLower().Contains(normalizedQuery))
-                             .ToListAsync();
-            }
-            else if(filter=="Track")
-            {
-                 songs = await _context.Songs
-             .Where(s => s.TrackName.ToLower().Contains(normalizedQuery))
-             .ToListAsync();
+                songs = await _context.Songs
+            .Where(s => s.TrackName.ToLower().Contains(normalizedQuery))
+            .ToListAsync();
             }
             else
             {
@@ -273,16 +354,16 @@ namespace WebApi.Controllers
                 return NotFound();
             }
             if (sort == "Album")
-                songs.OrderBy(s => s.AlbumName);
+                songs = songs.OrderBy(s => s.AlbumName).ToList();
             else if (sort == "Artist")
-                songs.OrderBy(s => s.ArtistName);
+                songs = songs.OrderBy(s => s.ArtistName).ToList();
             else if (sort == "Track")
-                songs.OrderBy(s => s.TrackName);
+                songs = songs.OrderBy(s => s.TrackName).ToList();
 
             return songs;
         }
 
-        
+
         #endregion
 
         private UserEntity? GetCurrentUser()
@@ -291,9 +372,45 @@ namespace WebApi.Controllers
             if (user != null)
             {
                 string username = user.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Name)?.Value;
-                return _userManager.FindByNameAsync(username).Result;
+                if (string.IsNullOrEmpty(username))
+                { return null; }
+
+                var userEntity = _userManager.FindByNameAsync(username).Result;
+
+                return userEntity;
             }
             return null;
+        }
+        private HateoasSongPlayWrapperDto CreateHateoasForSongPlay(SongPlay songPlay)
+        {
+            var id = songPlay.Id;
+            var dto = new HateoasSongPlayWrapperDto
+            {
+                SongPlay = songPlay,
+                Links = new List<HateoasLinkDto>
+                {
+                    new HateoasLinkDto(Url.Action("GetSongPlay", new { id }), "get_songplay", "GET"),
+                    new HateoasLinkDto(Url.Action("PutSongPlay", new { id }), "update_songplay", "PUT"),
+                    new HateoasLinkDto(Url.Action("DeleteSongPlay", new { id }), "delete_songplay", "DELETE"),
+                    new HateoasLinkDto(Url.Action("PostSongPlay"), "post_songplay", "POST")
+                }
+            };
+            return dto;
+        }
+        private HateoasSongWrapperDto CreateHateoasForSong(Song song)
+        {
+            var dto = new HateoasSongWrapperDto
+            {
+                Song = song,
+                Links = new List<HateoasLinkDto>
+                {
+                    new HateoasLinkDto(Url.Action("GetSong", new { URI = song.URI }), "get_song", "GET"),
+                    new HateoasLinkDto(Url.Action("PostSong"), "post_song", "POST"),
+                    new HateoasLinkDto(Url.Action("DeleteSong", new { URI = song.URI }), "delete_song", "DELETE"),
+                    new HateoasLinkDto(Url.Action("PutSong", new { URI = song.URI }), "put_song", "PUT")
+                }
+            };
+            return dto;
         }
     }
 }

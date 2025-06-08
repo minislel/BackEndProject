@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ApplicationCore.Models
 {
-    public class Song
+    public class Song 
     {
         [Key]
         public string URI { get; set; }

@@ -69,17 +69,13 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("Skip")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("SongURI")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("URI")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SongURI");
+                    b.HasIndex("URI");
 
                     b.ToTable("SongPlays");
                 });
@@ -298,7 +294,7 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("ApplicationCore.Models.Song", "Song")
                         .WithMany("SongPlays")
-                        .HasForeignKey("SongURI")
+                        .HasForeignKey("URI")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

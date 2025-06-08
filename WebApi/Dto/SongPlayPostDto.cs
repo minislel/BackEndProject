@@ -1,10 +1,7 @@
-﻿using ApplicationCore.Models;
-
-namespace WebApi.Dto
+﻿namespace WebApi.Dto
 {
-    public class SongPlayPutDto
+    public class SongPlayPostDto
     {
-        public int Id { get; set; }
         public string URI { get; set; }
         public DateTime PlayTime { get; set; }
         public string Platform { get; set; }
