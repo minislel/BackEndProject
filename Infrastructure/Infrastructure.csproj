@@ -8,6 +8,12 @@
 
   <ItemGroup>
     
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.0" />
+    
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.0" />
+    
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Server.Abstractions" Version="2.3.0" />
+    
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.14" />
     
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
@@ -24,7 +30,11 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.14" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.14" />
   </ItemGroup>
-
+	<ItemGroup>
+		<None Update="Data\spotify.csv">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ApplicationCore\ApplicationCore.csproj" />
   </ItemGroup>

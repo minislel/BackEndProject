@@ -72,10 +72,10 @@ namespace Infrastructure.EF
             ;
             
         }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
 
-        }
+        //}
     }
 
 }

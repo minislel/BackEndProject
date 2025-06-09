@@ -1,0 +1,35 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16
+    container_name: spotify_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: spotifydb    
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: WebApi/Dockerfile
+    container_name: spotify_backend
+    depends_on:
+      - db
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+      - "7001:7001"
+      - "5260:5260"
+    environment:
+      DOTNET_RUNNING_IN_CONTAINER: true
+      DB_CONNECTION: "Host=db;Port=5432;Database=spotifydb;Username=postgres;Password=postgres"
+    # jeśli używasz ASPNETCORE_ENVIRONMENT to dodaj:
+    # - ASPNETCORE_ENVIRONMENT=Development
+
+volumes:
+  db_data:

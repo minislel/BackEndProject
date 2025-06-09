@@ -11,13 +11,21 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.EnableSensitiveDataLogging(true);
 
+        //var config = new ConfigurationBuilder()
+        //    .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../WebApi"))
+        //    .AddJsonFile("appsettings.json")
+        //    .Build();
+
         var config = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../WebApi"))
-            .AddJsonFile("appsettings.json")
-            .Build();
+             .SetBasePath(Directory.GetCurrentDirectory())  
+             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+             .AddEnvironmentVariables()
+             .Build();
 
 
-        var connectionString = config.GetConnectionString("DefaultConnection");
+
+        var defaultConn = config.GetConnectionString("DefaultConnection");
+        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION") ?? defaultConn;
         optionsBuilder.UseNpgsql(connectionString);
 
         return new AppDbContext(optionsBuilder.Options);

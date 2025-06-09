@@ -8,12 +8,14 @@ namespace Infrastructure.Data;
 
 public class DataSeeder
 {
+
     public static async Task SeedAsync(AppDbContext context)
     {
         if (await context.SongPlays.AnyAsync())
             return;
 
-        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "spotify.csv");
+
+        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "spotify_history.csv");
         if (!File.Exists(path))
         {
             Console.WriteLine($"[Seeder] File not found: {path}");
