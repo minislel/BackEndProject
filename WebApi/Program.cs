@@ -116,15 +116,20 @@ Example: 'Bearer 12345abcdef'",
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Quiz API v1");
                 c.RoutePrefix = string.Empty;  
             });
-            var isDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER");
-            if (string.IsNullOrEmpty(isDocker))
+            //var isDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER");
+            //if (string.IsNullOrEmpty(isDocker))
+            //{
+            //    app.UseHttpsRedirection();
+            //}
+            if (app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
             }
 
 
 
-           // app.UseHttpsRedirection();
+
+            // app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
