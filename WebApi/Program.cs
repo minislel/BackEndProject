@@ -124,7 +124,7 @@ Example: 'Bearer 12345abcdef'",
 
 
 
-            app.UseHttpsRedirection();
+           // app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
