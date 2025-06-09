@@ -86,6 +86,11 @@ Example: 'Bearer 12345abcdef'",
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ListenAnyIP(7001);
+            });
+
 
             var app = builder.Build();
             using (var scope = app.Services.CreateScope())
