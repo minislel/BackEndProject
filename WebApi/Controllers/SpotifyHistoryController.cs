@@ -16,6 +16,11 @@ using WebApi.Dto;
 using System.Security.Policy;
 using Microsoft.IdentityModel.Tokens;
 
+/// <summary>
+/// Controller for managing Spotify listening history of the authenticated user.
+/// Provides endpoints to retrieve details about individual playbacks, to create,
+/// update, and delete playback records, as well as to manage songs and search functionality.
+/// </summary>
 namespace WebApi.Controllers
 {
 
@@ -34,10 +39,22 @@ namespace WebApi.Controllers
             _userManager = userManager;
 
         }
+
         #region Playback methods
 
-        // GET: api/SpotifyHistory/5
+
+        // GET: api/SpotifyHistory/playbacks/{id}
+        /// <summary>
+        /// Retrieves a specific song play record by its unique ID.
+        /// </summary>
+        /// <param name="id">The ID of the playback record.</param>
+        /// <response code="200">Returns the wrapped DTO with playback data and HATEOAS links.</response>
+        /// <response code="404">Playback record not found.</response>
+        /// <response code="403">Forbidden: user not authorized.</response>
         [HttpGet("playbacks/{id:int}")]
+        [ProducesResponseType(typeof(HateoasSongPlayWrapperDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<HateoasSongPlayWrapperDto>> GetSongPlay(int id)
         {
             var songPlay = await _context.SongPlays.FindAsync(id);
@@ -55,9 +72,21 @@ namespace WebApi.Controllers
 
 
 
-        // PUT: api/SpotifyHistory/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // PUT: api/SpotifyHistory/playbacks/{id}
+        /// <summary>
+        /// Updates an existing song play record.
+        /// </summary>
+        /// <param name="id">The ID of the playback record to update.</param>
+        /// <param name="songPlay">DTO containing updated playback details.</param>
+        /// <response code="200">Returns the updated wrapped DTO with HATEOAS links.</response>
+        /// <response code="400">Invalid request data.</response>
+        /// <response code="404">Playback record not found.</response>
+        /// <response code="403">Forbidden: user not authorized.</response>
         [HttpPut("playbacks/{id}")]
+        [ProducesResponseType(typeof(HateoasSongPlayWrapperDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<HateoasSongPlayWrapperDto>> PutSongPlay(int id, SongPlayPutDto songPlay)
         {
             if (id != songPlay.Id)
@@ -117,10 +146,18 @@ namespace WebApi.Controllers
             var result = CreateHateoasForSongPlay(existingSongPlay);
             return Ok(result);
         }
-
-        // POST: api/SpotifyHistory
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: api/SpotifyHistory/playbacks
+        /// <summary>
+        /// Creates a new song play record for the authenticated user.
+        /// </summary>
+        /// <param name="songPlay">DTO containing playback details.</param>
+        /// <response code="201">Returns the created wrapped DTO with HATEOAS links.</response>
+        /// <response code="400">Invalid data or song not found.</response>
+        /// <response code="403">Forbidden: user not authorized.</response>
         [HttpPost("playbacks")]
+        [ProducesResponseType(typeof(HateoasSongPlayWrapperDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<HateoasSongPlayWrapperDto>> PostSongPlay(SongPlayPostDto songPlay)
         {
             var currentUser = GetCurrentUser();
@@ -152,9 +189,18 @@ namespace WebApi.Controllers
             var result = CreateHateoasForSongPlay(songPlayEntity);
             return Ok(result);
         }
-
-        // DELETE: api/SpotifyHistory/5
+        // DELETE: api/SpotifyHistory/playbacks/{id}
+        /// <summary>
+        /// Deletes a song play record by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the playback record to delete.</param>
+        /// <response code="204">Playback record deleted successfully.</response>
+        /// <response code="404">Playback record not found.</response>
+        /// <response code="403">Forbidden: user not authorized.</response>
         [HttpDelete("playbacks/{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<List<HateoasLinkDto>>> DeleteSongPlay(int id)
         {
             var currentUser = GetCurrentUser();
@@ -179,7 +225,16 @@ namespace WebApi.Controllers
                 };
             return NoContent();
         }
+        // GET: api/SpotifyHistory/playbacks/{URI}
+        /// <summary>
+        /// Retrieves all playbacks for a specified song URI.
+        /// </summary>
+        /// <param name="URI">Spotify URI of the song.</param>
+        /// <response code="200">Returns list of playback records.</response>
+        /// <response code="404">No playback records found.</response>
         [HttpGet("playbacks/{URI}")]
+        [ProducesResponseType(typeof(IEnumerable<SongPlay>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<IEnumerable<SongPlay>>> GetSongPlaysByURI(string URI)
         {
             var songPlays = await _context.SongPlays
@@ -200,7 +255,17 @@ namespace WebApi.Controllers
         }
         #endregion
         #region Song methods
+
+        // GET: api/SpotifyHistory/songs/{URI}
+        /// <summary>
+        /// Retrieves details of a specific song by Spotify URI.
+        /// </summary>
+        /// <param name="URI">Spotify URI of the song.</param>
+        /// <response code="200">Returns the wrapped DTO with song data and HATEOAS links.</response>
+        /// <response code="404">Song not found.</response>
         [HttpGet("songs/{URI}")]
+        [ProducesResponseType(typeof(HateoasSongWrapperDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<HateoasSongWrapperDto>> GetSong(string URI)
         {
             var song = await _context.Songs.FindAsync(URI);
@@ -211,7 +276,13 @@ namespace WebApi.Controllers
             var result = CreateHateoasForSong(song);
             return Ok(result);
         }
+        // GET: api/SpotifyHistory/songs/top10
+        /// <summary>
+        /// Retrieves the top 10 songs by play count.
+        /// </summary>
+        /// <response code="200">Returns list of top 10 songs with play count.</response>
         [HttpGet("songs/top10")]
+        [ProducesResponseType(typeof(IEnumerable<SongRankElementDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<SongRankElementDto>>> GetTop10Songs()
         {
             var topSongs = await _context.SongPlays
@@ -227,7 +298,18 @@ namespace WebApi.Controllers
                 .ToListAsync();
             return Ok(topSongs);
         }
+        // POST: api/SpotifyHistory/songs
+        /// <summary>
+        /// Creates a new song record.
+        /// </summary>
+        /// <param name="song">DTO with song metadata.</param>
+        /// <response code="201">Returns the wrapped DTO with created song and HATEOAS links.</response>
+        /// <response code="400">Invalid input data.</response>
+        /// <response code="403">Forbidden: user not authorized.</response>
         [HttpPost("songs")]
+        [ProducesResponseType(typeof(HateoasSongWrapperDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<HateoasSongWrapperDto>> PostSong(SongPostDto song)
         {
             var currentUser = GetCurrentUser();
@@ -251,7 +333,21 @@ namespace WebApi.Controllers
             var result = CreateHateoasForSong(newSong);
             return Ok(result);
         }
+        // PUT: api/SpotifyHistory/songs
+        /// <summary>
+        /// Updates metadata of an existing song.
+        /// </summary>
+        /// <param name="URI">URI of the song to update.</param>
+        /// <param name="song">DTO with updated song details.</param>
+        /// <response code="200">Returns the wrapped DTO with updated song and HATEOAS links.</response>
+        /// <response code="400">Invalid input data.</response>
+        /// <response code="404">Song not found.</response>
+        /// <response code="403">Forbidden: user not authorized.</response>
         [HttpPut("songs")]
+        [ProducesResponseType(typeof(HateoasSongWrapperDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<HateoasSongWrapperDto>> PutSong(string URI, SongPutDto song)
         {
             var currentUser = GetCurrentUser();
@@ -276,7 +372,18 @@ namespace WebApi.Controllers
             var result = CreateHateoasForSong(existingSong);
             return Ok(result);
         }
+        // DELETE: api/SpotifyHistory/songs/{URI}
+        /// <summary>
+        /// Deletes a song and its associated playback records.
+        /// </summary>
+        /// <param name="URI">URI of the song to delete.</param>
+        /// <response code="200">Returns HATEOAS links for related actions.</response>
+        /// <response code="404">Song not found.</response>
+        /// <response code="403">Forbidden: user not authorized.</response>
         [HttpDelete("songs/{URI}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<List<HateoasLinkDto>>> DeleteSong(string URI)
         {
             var currentUser = GetCurrentUser();
@@ -310,7 +417,20 @@ namespace WebApi.Controllers
 
 
         }
+        // GET: api/SpotifyHistory/songs/search/{query}
+        /// <summary>
+        /// Searches for songs by query with optional filter and sort.
+        /// </summary>
+        /// <param name="query">Search term (track, artist, or album).</param>
+        /// <param name="filter">Optional filter: "Artist", "Album", or "Track".</param>
+        /// <param name="sort">Optional sort: "Artist", "Album", or "Track".</param>
+        /// <response code="200">Returns list of matching songs.</response>
+        /// <response code="400">Invalid query or filter.</response>
+        /// <response code="404">No songs found.</response>
         [HttpGet("songs/search/{query}")]
+        [ProducesResponseType(typeof(IEnumerable<Song>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ICollection<Song>>> SearchSong(string query, string? filter, string? sort)
         {
             if (query.IsNullOrEmpty() || string.IsNullOrWhiteSpace(query))
@@ -365,6 +485,11 @@ namespace WebApi.Controllers
 
 
         #endregion
+        /// <summary>
+        /// Retrieves all song play records for the authenticated user.
+        /// </summary>
+        /// <returns>List of <see cref="SongPlay"/> entities belonging to the current user.</returns>
+        
 
         private UserEntity? GetCurrentUser()
         {

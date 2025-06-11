@@ -1,8 +1,11 @@
 ﻿namespace WebApi.Dto
 {
+    
     public class SongPlayPostDto
     {
+       
         public string URI { get; set; }
+       
         public DateTime PlayTime { get; set; }
         public string Platform { get; set; }
         public int MsPlayed { get; set; }
