@@ -89,7 +89,7 @@ Example: 'Bearer 12345abcdef'",
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "Quiz API",
+                    Title = "SpotifyHistory API",
                 });
             });
             builder.Services.AddControllers();
