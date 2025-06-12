@@ -14,7 +14,6 @@ namespace WebApi
 
             // Add services to the container.
             builder.Services.AddAuthorization();
-            
             builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables();
             var config = builder.Configuration;
@@ -29,11 +28,6 @@ namespace WebApi
                               .AllowAnyHeader();
                     });
             });
-
-            
-
-
-
             var connectionString = config["DB_CONNECTION"]
                                    ?? config.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<AppDbContext>(options =>
