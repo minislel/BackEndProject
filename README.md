@@ -15,4 +15,7 @@ Aby odpalić samą Bazę, uzywamy `docker compose -f docker-compose.db.yaml up -
  (Nie jest konieczny manualny import czy wrzucanie pliku csv, jest on już w plikach projektu)
 3. Aby sprawdzić działanie API, można użyć Postmana (port 5000) lub wejść na swaggera (port 7001) (porty są już sforwardowane).
 
+## Autoryzacja
+Aby móc korzystać z niektórych endpointów API, należy się zalogować. W tym celu należy wysłać POST na `/api/auth/login` z danymi użytkownika.
+(Domyślnie Admin:Admin123!)
 
