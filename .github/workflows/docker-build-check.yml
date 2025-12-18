@@ -1,0 +1,18 @@
+name: Docker Compose Prod Build Check 
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build with Compose
+        run: |
+          docker compose -f docker-compose.prod.yaml build
