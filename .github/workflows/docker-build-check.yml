@@ -1,4 +1,4 @@
-name: Docker Compose Prod Build Check 
+name: Docker Build Check
 
 on:
   push:
@@ -7,12 +7,21 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build-check:
+  docker-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build with Compose
-        run: |
-          docker compose -f docker-compose.prod.yaml build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./WebApi/Dockerfile
+          push: false
+          tags: spotify-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

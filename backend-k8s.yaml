@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spotify-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spotify-backend
+  template:
+    metadata:
+      labels:
+        app: spotify-backend
+    spec:
+      containers:
+      - name: backend
+        image: spotify_backend:latest 
+        imagePullPolicy: Never 
+        env:
+        - name: DB_CONNECTION
+          value: "Host=db;Port=5432;Database=spotifydb;Username=postgres;Password=postgres"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: NodePort 
+  selector:
+    app: spotify-backend
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30001
